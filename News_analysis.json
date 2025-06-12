@@ -1,0 +1,360 @@
+{
+  "name": "News_analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "new_url"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -820,
+        -20
+      ],
+      "id": "6a6401e4-6d8d-4b0e-baaf-7ca82b9cdb83",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "resource": "extract",
+        "urls": "={{ $json.new_url }}",
+        "extractionMethod": "schema",
+        "extractionPrompt": "=Please collect information about finance and economics news",
+        "schemaDefinitionType": "example",
+        "jsonExample": "{\"news\": [{\n  \"news_title\": \"news headlines\",\n  \"news_abstract\": \"Summarize the main content of the news in one sentence\",\n  \"news_url\": [\"URL of the page where the news story is located, if there are more than one show multiple\"]\n}]}"
+      },
+      "type": "n8n-nodes-firecrawl-scraper.fireCrawlScraper",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        40
+      ],
+      "id": "d3926449-aaf4-4b7c-a934-dc2c68229adb",
+      "name": "FireCrawl Scraper",
+      "credentials": {
+        "firecrawlApi": {
+          "id": "4P1sL6xEg5vQ2rDv",
+          "name": "Firecrawl account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an investment analyst who analyses financial news and follows, will interpret the news in the following ways:\n- Original News Title\n- authenticity\n- market sentiment\n  - stock market\n  - consensus\n- risk\n  - short term\n  - long term\n- easily overlooked information\n- potential positive vs. negative",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "={\"news_title\":{{ $json.news_title }},\n\"news_abstract\":{{ $json.news_abstract }}} "
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -160,
+        40
+      ],
+      "id": "7ea19d75-5c89-4ee4-a3df-4c3a43e2e3ee",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-04-17",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -132,
+        260
+      ],
+      "id": "2b048ff3-d490-48f9-8291-ad959fa21d95",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IUMs5ZEsibnnLSOh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.data.news",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        40
+      ],
+      "id": "c03d64a3-7a30-40d6-bcdb-664dc7d8cc84",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{   \"new_title\":\"Original News Title\",\n    \"authenticity\": \"The news is most likely true\",\n    \"market sentiment\": {\n        \"stock market\": \"The news may cause the stock market to rise\",\n        \"consensus\": \"Investors generally believe that the news will push the plate up\"\n    },\n    \"risk\": {\n        \"short term\": \"In the short term, it will benefit the stock market.\",\n        \"long term\": \"Long-term considerations lead to illiquidity problems\"\n    },\n    \"easily overlooked information\": \"The news that OPEC may cut production in the news is easy to ignore\",\n    \"potential positive vs. negative\": \"OPEC production cuts will cause fuel prices to rise and the prices of plastics and other by-products to rise sharply\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -12,
+        260
+      ],
+      "id": "b28990d0-7277-4b8a-9bb0-ba421646c619",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        216,
+        40
+      ],
+      "id": "142d875c-387a-4b96-a3d3-8bd9e189882c",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -880,
+        540
+      ],
+      "id": "cf4e3e5b-686d-4c0c-89e4-50abbbf51de3",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "## Mcp Server工作流\n**负责从传入的新闻网站获取财经新闻并进行分析",
+        "height": 520,
+        "width": 1480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1000,
+        -120
+      ],
+      "id": "43aa4f33-8618-4fcf-88be-52f6c7ee44bc",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.197.15.89:8013/heartbeat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n\"host_slice\":\"10.197.15.89_s1\",\n\"url\":\"http://10.197.15.89:5678/mcp-test/news_analysis/sse\",\n  \"tools\":[\"news_analysis\"],\n  \"describe\":[\"Analyze financial news on web pages through incoming url\"],\n  \"inputSchema\":[{\n    \"new_url\":\"a webside Url\"\n  }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -640,
+        540
+      ],
+      "id": "70bd035d-b1a0-477f-9d17-c490ab37cb80",
+      "name": "HTTP Request",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "## 定时注册\n**简单的定时注册任务，将服务注册到注册中心\n**考虑到健壮性最好调用一次上述mcp server成功返回后再触发注册，目前仅简单实现",
+        "height": 260,
+        "width": 660,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1000,
+        440
+      ],
+      "id": "fa250da4-8e6f-4fd6-887f-d2be9516d552",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool and pass in url to get financial news analysis report. The input should be a string, which is the url of the web page where the financial news is located.Inputs format:\n{\n  \"new_url\":\"new webside Url\"\n}",
+        "workflowId": {
+          "__rl": true,
+          "value": "3f6qnXTRzUCotqOl",
+          "mode": "list",
+          "cachedResultName": "News_analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "new_url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('new_url', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "new_url"
+          ],
+          "schema": [
+            {
+              "id": "new_url",
+              "displayName": "new_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -620,
+        300
+      ],
+      "id": "8c220b49-2fd5-4751-bb68-8e07f66d0dc5",
+      "name": "news_analysis",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "path": "news_analysis"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        160
+      ],
+      "id": "8cf18afb-c050-4a3a-bd88-514733eab55e",
+      "name": "News analysis",
+      "webhookId": "2693def8-facb-4eee-b167-5ced295496c2",
+      "notesInFlow": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "FireCrawl Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FireCrawl Scraper": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        []
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "news_analysis": {
+      "ai_tool": [
+        [
+          {
+            "node": "News analysis",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 600
+  },
+  "versionId": "adfc888b-a470-4ba0-b311-5e2c188bd35b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ee4738bfdceb1f6f980215da8a6866bae4c412ac71bf242dd2e685509cf7a4b3"
+  },
+  "id": "3f6qnXTRzUCotqOl",
+  "tags": []
+}

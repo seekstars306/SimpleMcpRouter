@@ -1,0 +1,258 @@
+{
+  "name": "Test_mcprouter",
+  "nodes": [
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "##Promat\nFor any request, invoke the MCP tool with the appropriate methods and parameters.\nFor mcp large model contexts, you can get all mcp server functions from \"get_active_servers\" and call \"handle_mcp_request\" depending on the format of the parameters returned."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        -200
+      ],
+      "id": "1b86d90b-5f84-4931-bb7b-0fb233bf06c6",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-05-20",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        40
+      ],
+      "id": "76aa8a20-1df6-4377-93c1-644fb23fb420",
+      "name": "Google Gemini Chat Model",
+      "notesInFlow": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IUMs5ZEsibnnLSOh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "notes": "For mcp large model context, you can obtain all mcp server functions from Get_all_mcp_server, and call Execute_mcp according to the relevant format and address."
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -520,
+        -200
+      ],
+      "id": "bde0e1f4-643a-4352-aacc-c7ff39e55187",
+      "name": "When chat message received",
+      "webhookId": "d0690e4d-b9e9-476f-86b6-6fe6cdb450ff"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -180,
+        40
+      ],
+      "id": "a05f1a19-a9b2-43d4-b2f7-7e0db3379db9",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get all mcp server services\n",
+        "url": "http://10.197.15.89:8012/servers",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        240
+      ],
+      "id": "9eecba06-83cc-4b9f-9b07-986268756df9",
+      "name": "Get_all_mcp_server"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Calls the mcp service and passes parameters in the format",
+        "url": "http://10.197.15.89:8000/sse",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', ``, 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        240
+      ],
+      "id": "dd70c007-8574-413b-b366-f33871ff7f4e",
+      "name": "Execute_mcp"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Must be performed before any activity.Get a list of tools, Tools must be obtained from any command before it can be executed.The function is simply to get a list of tools.",
+        "connectionType": "sse",
+        "operation": "executeTool",
+        "toolName": "get_active_servers"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ],
+      "id": "4a398967-ec99-46d1-b46d-e1a4cd225ee3",
+      "name": "get_active_servers",
+      "credentials": {
+        "mcpClientSseApi": {
+          "id": "71fz2pPEhEV1k51R",
+          "name": "MCP Client (SSE) account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "You can perform any tool method other than query tool list functionality.Be responsible for specific execution tools, and combine parameters to make calls.format is as follows:\n{\"request\":{\n  \"jsonrpc\": \"2.0\", \n  \"method\": \"Tool name, usually a string\",\n  \"params\": tools inputSchema a Json\n  \"id\": random id,type is int\n}}",
+        "connectionType": "sse",
+        "operation": "executeTool",
+        "toolName": "handle_mcp_request",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        80,
+        40
+      ],
+      "id": "63111449-fc30-4af1-addd-92c323754974",
+      "name": "handle_mcp_request",
+      "credentials": {
+        "mcpClientSseApi": {
+          "id": "71fz2pPEhEV1k51R",
+          "name": "MCP Client (SSE) account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "获取天气的接口\n{\"state':州名}",
+        "connectionType": "sse",
+        "operation": "executeTool",
+        "toolName": "get_alerts",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        260,
+        20
+      ],
+      "id": "466c7864-4496-4401-ab70-cab45e4100f4",
+      "name": "MCP Client",
+      "credentials": {
+        "mcpClientSseApi": {
+          "id": "71fz2pPEhEV1k51R",
+          "name": "MCP Client (SSE) account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_all_mcp_server": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Execute_mcp": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "get_active_servers": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "handle_mcp_request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "203be6bd-2559-4817-86d9-f546ea20fd0a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ee4738bfdceb1f6f980215da8a6866bae4c412ac71bf242dd2e685509cf7a4b3"
+  },
+  "id": "fTDYgf1eJIW1n9F5",
+  "tags": []
+}
