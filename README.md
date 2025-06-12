@@ -1,3 +1,4 @@
 News_analysis.json与Test_mcprouter.json为n8n项目文件，测试使用
 Heartbeat.py为心跳注册，配合News_analysis.json中定时注册使用
 McpRouter.py为核心注册中心
+项目处于demo阶段，仅简单实现功能
